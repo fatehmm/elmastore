@@ -13,6 +13,7 @@ import { db } from "@/server/db";
 import { createTable, users } from "@/server/db/schema";
 import { resend } from "./email";
 import { eq } from "drizzle-orm";
+import { v4 as uuid } from "uuid";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -83,7 +84,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   session: {
-    strategy: "jwt",
+    strategy: "database",
   },
   adapter: DrizzleAdapter(db, createTable) as Adapter,
   providers: [
@@ -104,8 +105,14 @@ export const authOptions: NextAuthOptions = {
           from: env.EMAIL_FROM,
           to: identifier,
           subject: "Welcome to Elma Store",
-          react: VerificationEmailTemplate({ url: url }),
+          react: VerificationEmailTemplate({
+            url: url,
+            baseUrl: env.NEXTAUTH_URL,
+          }),
           text: "Sign in",
+          headers: {
+            "X-Entity-Ref-ID": uuid(),
+          },
         });
 
         if (error) {
