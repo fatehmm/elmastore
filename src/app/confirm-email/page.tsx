@@ -3,13 +3,11 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
-
 export default function ConfirmEmail() {
   const searchParams = useSearchParams();
-  const link = searchParams.get("link");
-  const token = searchParams.get("token");
-  const email = searchParams.get("email");
+  const link = searchParams.get("link") ? searchParams.get("link") : "0";
+  const token = searchParams.get("token") ? searchParams.get("token") : "0";
+  const email = searchParams.get("email") ? searchParams.get("email") : "0";
 
   return (
     <>
