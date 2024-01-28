@@ -5,11 +5,14 @@ import {
   type NextAuthOptions,
 } from "next-auth";
 import { type Adapter } from "next-auth/adapters";
-import DiscordProvider from "next-auth/providers/discord";
+import EmailProvider from "next-auth/providers/email";
+import { VerificationEmailTemplate } from "@/app/components/emails/verification-email";
 
 import { env } from "@/env";
 import { db } from "@/server/db";
-import { createTable } from "@/server/db/schema";
+import { createTable, users } from "@/server/db/schema";
+import { resend } from "./email";
+import { eq } from "drizzle-orm";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -39,20 +42,78 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    // session: ({ session, user }) => ({
+    //   ...session,
+    //   user: {
+    //     ...session.user,
+    //     id: user.id,
+    //   },
+    // }),
+    async session({ token, session }) {
+      console.log("SESSION WAS HIT");
+
+      if (token) {
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.picture;
+      }
+
+      return session;
+    },
+    async jwt({ token, user }) {
+      console.log("JWT WAS HIT");
+      if (!token || !token.email) throw new Error("Unauthorized");
+      const dbUser = await db.query.users.findFirst({
+        where: eq(users.email, token.email),
+      });
+
+      if (!dbUser) {
+        if (user) {
+          token.id = user?.id;
+        }
+        return token;
+      }
+
+      return {
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        picture: dbUser.image,
+      };
+    },
+  },
+  session: {
+    strategy: "jwt",
   },
   adapter: DrizzleAdapter(db, createTable) as Adapter,
   providers: [
-    DiscordProvider({
-      clientId: env.DISCORD_CLIENT_ID,
-      clientSecret: env.DISCORD_CLIENT_SECRET,
+    EmailProvider({
+      server: {
+        host: env.EMAIL_SERVER_HOST,
+        port: env.EMAIL_SERVER_PORT,
+        auth: {
+          user: env.EMAIL_SERVER_USER,
+          pass: env.EMAIL_SERVER_PASSWORD,
+        },
+      },
+      from: env.EMAIL_FROM,
+      sendVerificationRequest: async (params) => {
+        const { identifier, url, provider, theme } = params;
+        const { host } = new URL(url);
+        const { data, error } = await resend.emails.send({
+          from: env.EMAIL_FROM,
+          to: identifier,
+          subject: "Welcome to Elma Store",
+          react: VerificationEmailTemplate({ url: url }),
+          text: "Sign in",
+        });
+
+        if (error) {
+          throw new Error(`Email(s) (${error.name}) could not be sent`);
+        }
+      },
     }),
+
     /**
      * ...add more providers here.
      *
