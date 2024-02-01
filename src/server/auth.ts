@@ -57,6 +57,7 @@ export const authOptions: NextAuthOptions = {
       console.log("SESSION WAS HIT");
 
       if (token) {
+        session.user.id = token.id as string;
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.image = token.picture;
@@ -87,7 +88,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   session: {
-    strategy: "database",
+    strategy: "jwt",
   },
   adapter: DrizzleAdapter(db, createTable) as Adapter,
   providers: [

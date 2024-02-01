@@ -77,7 +77,7 @@ export default function LoginClient() {
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
-                      className="max-w-sm"
+                      className="max-w-sm text-base"
                       placeholder="info@gmail.com"
                       {...field}
                     />

@@ -15,6 +15,7 @@ import { links } from "@/config/nav";
 import { Session } from "next-auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Menu } from "lucide-react";
 
 export default function NavClient({ session }: { session: Session | null }) {
   const path = usePathname();
@@ -24,7 +25,9 @@ export default function NavClient({ session }: { session: Session | null }) {
     <>
       <Drawer direction="left">
         <div className="flex justify-between border px-4 py-4">
-          <DrawerTrigger className="text-xl sm:hidden">Store</DrawerTrigger>
+          <DrawerTrigger className="text-xl sm:hidden">
+            <Menu className="h-8 w-8" />
+          </DrawerTrigger>
           <span className="hidden text-2xl sm:block">Store</span>
           <div>
             {session ? (

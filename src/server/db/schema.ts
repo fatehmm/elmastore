@@ -35,7 +35,7 @@ export const posts = createTable(
   (example) => ({
     createdByIdIdx: index("createdById_idx").on(example.createdById),
     nameIndex: index("name_idx").on(example.name),
-  })
+  }),
 );
 
 export const users = createTable("user", {
@@ -46,6 +46,10 @@ export const users = createTable("user", {
     mode: "date",
   }).default(sql`CURRENT_TIMESTAMP`),
   image: varchar("image", { length: 255 }),
+  bio: varchar("bio", { length: 255 }),
+  faculty: varchar("faculty", { length: 255 }),
+  location: varchar("location", { length: 255 }),
+  grade: integer("grade"),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -76,7 +80,7 @@ export const accounts = createTable(
       columns: [account.provider, account.providerAccountId],
     }),
     userIdIdx: index("account_userId_idx").on(account.userId),
-  })
+  }),
 );
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -96,7 +100,7 @@ export const sessions = createTable(
   },
   (session) => ({
     userIdIdx: index("session_userId_idx").on(session.userId),
-  })
+  }),
 );
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -112,5 +116,5 @@ export const verificationTokens = createTable(
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
-  })
+  }),
 );
